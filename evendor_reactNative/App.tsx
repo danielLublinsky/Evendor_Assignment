@@ -13,6 +13,7 @@ import {
 const App = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -23,9 +24,11 @@ const App = () => {
       const data = await response.json();
       setEvents(data.events);
       setLoading(false);
+      setError(false); // Reset error state if fetch succeeds
     } catch (error) {
       console.error('Error fetching events:', error);
       setLoading(false);
+      setError(true); // Set error state to true if fetch fails
     }
   };
 
@@ -41,7 +44,10 @@ const App = () => {
       </View>
     ));
   };
-
+  const RefreshPress = () => {
+    setLoading(true);
+    fetchEvents();
+  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -58,7 +64,7 @@ const App = () => {
               style={styles.buttonImage}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.ButtonStyle}>
+          <TouchableOpacity style={styles.ButtonStyle} onPress={RefreshPress}>
             <Image
               source={require('./Assets/refresh.png')}
               style={styles.buttonImage}
@@ -75,6 +81,8 @@ const App = () => {
               size="large"
               color="#0000ff"
             />
+          ) : error ? ( // Display error message if error state is true
+            <Text style={styles.errorText}>No server connection</Text>
           ) : (
             renderEvents()
           )}
@@ -168,6 +176,11 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     alignSelf: 'center',
+  },
+  errorText: {
+    fontSize: 18,
+    color: 'red',
+    marginTop: 20,
   },
 });
 
