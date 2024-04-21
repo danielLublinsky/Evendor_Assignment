@@ -6,17 +6,58 @@ const app = express();
 
 app.use(bodyParser.json());
 
-let eventsList = [];
-const eventFields = ["name", "date", "venue", "guestNumber", "type"];
+let eventsList = [
+  {
+    name: "Demo event 1",
+    date: "2024-04-20",
+    venue: "Venue 1",
+    guestNumber: 25,
+    type: "birthday",
+    price: 3000,
+  },
+  {
+    name: "Demo event 2",
+    date: "2024-04-21",
+    venue: "Venue 2",
+    guestNumber: 150,
+    type: "wedding",
+    price: 10000,
+  },
+  {
+    name: "Demo event 2",
+    date: "2024-04-21",
+    venue: "Venue 2",
+    guestNumber: 150,
+    type: "wedding",
+    price: 10000,
+  },
+  {
+    name: "Demo event 2",
+    date: "2024-04-21",
+    venue: "Venue 2",
+    guestNumber: 150,
+    type: "wedding",
+    price: 10000,
+  },
+  {
+    name: "Demo event 2",
+    date: "2024-04-21",
+    venue: "Venue 2",
+    guestNumber: 150,
+    type: "wedding",
+    price: 10000,
+  },
+];
+const eventFields = ["name", "date", "venue", "guestNumber", "type", "price"];
 
 const eventFilters = [
-  { name: "type", filterFunction: filterByType },
-  { name: "date", filterFunction: filterByDate },
+  { name: "type", filter: filterByType },
+  { name: "date", filter: filterByDate },
 ];
 app.post("/events", (req, res) => {
   const eventData = req.body;
 
-  //validating data in a clean & dynamic way
+  // Validating data in a clean & dynamic way
   let missingFields = [];
   for (let i = 0; i < eventFields.length; i++) {
     const field = eventFields[i];
@@ -31,7 +72,6 @@ app.post("/events", (req, res) => {
     });
   }
 
-  // add the event to the list
   eventsList.push(eventData);
 
   return res
@@ -41,15 +81,12 @@ app.post("/events", (req, res) => {
 
 app.get("/events", (req, res) => {
   const queryParams = req.query;
-  let filteredEvents = events;
+  let filteredEvents = eventsList;
 
-  // using a loops and structs for clean dynamic code
+  // Using loops and objects for clean dynamic code
   eventFilters.forEach((filter) => {
     if (queryParams[filter.name]) {
-      filteredEvents = filter.filterFunction(
-        filteredEvents,
-        queryParams[filter.name]
-      );
+      filteredEvents = filter.filter(filteredEvents, queryParams[filter.name]);
     }
   });
 
