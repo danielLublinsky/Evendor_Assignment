@@ -10,25 +10,38 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+
 const App = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [fetchController, setFetchController] = useState(null);
+
   useEffect(() => {
     fetchEvents();
   }, []);
 
   const fetchEvents = async () => {
+    if (fetchController) fetchController.abort();
+
+    const controller = new AbortController();
+    setFetchController(controller);
+
     try {
-      const response = await fetch('http://192.168.1.7:3000/events');
+      const response = await fetch('http://192.168.1.7:3000/events', {
+        signal: controller.signal,
+      });
       const data = await response.json();
       setEvents(data.events);
       setLoading(false);
-      setError(false); // Reset error state if fetch succeeds
+      setError(false);
+      console.log('Fetch successful');
     } catch (error) {
-      console.error('Error fetching events:', error);
-      setLoading(false);
-      setError(true); // Set error state to true if fetch fails
+      if (error.name !== 'AbortError') {
+        setLoading(false);
+        setErrorWithLog(error);
+      }
     }
   };
 
@@ -44,10 +57,18 @@ const App = () => {
       </View>
     ));
   };
-  const RefreshPress = () => {
+
+  const refreshPress = () => {
     setLoading(true);
     fetchEvents();
   };
+
+  const setErrorWithLog = message => {
+    setErrorMessage(message);
+    setError(true);
+    console.log('Error message set:', message);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -64,7 +85,7 @@ const App = () => {
               style={styles.buttonImage}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.ButtonStyle} onPress={RefreshPress}>
+          <TouchableOpacity style={styles.ButtonStyle} onPress={refreshPress}>
             <Image
               source={require('./Assets/refresh.png')}
               style={styles.buttonImage}
@@ -81,8 +102,8 @@ const App = () => {
               size="large"
               color="#0000ff"
             />
-          ) : error ? ( // Display error message if error state is true
-            <Text style={styles.errorText}>No server connection</Text>
+          ) : error ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
           ) : (
             renderEvents()
           )}
@@ -93,7 +114,6 @@ const App = () => {
     </SafeAreaView>
   );
 };
-
 // styles
 const styles = StyleSheet.create({
   container: {
