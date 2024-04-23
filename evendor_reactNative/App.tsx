@@ -19,7 +19,8 @@ import {Picker} from '@react-native-picker/picker';
 
 const FilterComponent = ({isVisible, onClose, onApply}) => {
   const slideAnimation = useRef(new Animated.Value(0)).current;
-  const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [dateShown, setDateShown] = useState(dayjs().format('YYYY-MM-DD'));
+  const [date, setDate] = useState('');
   const [eventName, setEventName] = useState('');
   const [eventType, setEventType] = useState('');
 
@@ -33,7 +34,25 @@ const FilterComponent = ({isVisible, onClose, onApply}) => {
 
   const applyFilter = () => {
     onApply(date, eventName, eventType);
+    closeFilter();
+  };
+
+  const cancelFilter = () => {
+    onApply('', '', '');
+    closeFilter();
+  };
+
+  const closeFilter = () => {
+    setDateShown(dayjs().format('YYYY-MM-DD'));
+    setEventName('');
+    setEventType('');
+    setDate('');
     onClose();
+  };
+
+  const updateDates = newDate => {
+    setDateShown(dayjs(newDate).format('YYYY-MM-DD'));
+    setDate(dateShown);
   };
 
   return (
@@ -63,8 +82,8 @@ const FilterComponent = ({isVisible, onClose, onApply}) => {
         />
         <DateTimePicker
           mode="single"
-          date={date}
-          onChange={params => setDate(dayjs(params.date).format('YYYY-MM-DD'))}
+          date={dateShown}
+          onChange={params => updateDates(params.date)}
         />
         <Picker
           selectedValue={eventType}
@@ -84,8 +103,8 @@ const FilterComponent = ({isVisible, onClose, onApply}) => {
           <TouchableOpacity
             style={styles.ButtonStyle}
             title="Cancel"
-            onPress={onClose}>
-            <Text style={styles.filterText}>Close</Text>
+            onPress={cancelFilter}>
+            <Text style={styles.filterText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -101,7 +120,7 @@ const App = () => {
   const [fetchController, setFetchController] = useState(null);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [filterData, setFilterData] = useState({
-    date: dayjs().format('YYYY-MM-DD'),
+    date: '',
     name: '',
     type: '',
   });
