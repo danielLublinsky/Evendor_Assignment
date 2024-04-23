@@ -9,7 +9,7 @@ app.use(bodyParser.json());
 let eventsList = [
   {
     name: "Demo event 1",
-    date: "2024-04-20",
+    date: "2024-04-23",
     venue: "Venue 1",
     guestNumber: 25,
     type: "birthday",
@@ -17,7 +17,7 @@ let eventsList = [
   },
   {
     name: "Demo event 2",
-    date: "2024-04-21",
+    date: "2024-04-23",
     venue: "Venue 2",
     guestNumber: 150,
     type: "wedding",
@@ -81,6 +81,7 @@ app.post("/events", (req, res) => {
 
 app.get("/events", (req, res) => {
   const queryParams = req.query;
+  console.log(queryParams);
   let filteredEvents = eventsList;
 
   // Using loops and objects for clean dynamic code

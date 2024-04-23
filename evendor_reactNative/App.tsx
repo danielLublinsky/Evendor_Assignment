@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -9,7 +9,89 @@ import {
   View,
   ActivityIndicator,
   TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
+  Animated,
 } from 'react-native';
+import DateTimePicker from 'react-native-ui-datepicker';
+import dayjs from 'dayjs';
+import {Picker} from '@react-native-picker/picker';
+
+const FilterComponent = ({isVisible, onClose, onApply}) => {
+  const slideAnimation = useRef(new Animated.Value(0)).current;
+  const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [eventName, setEventName] = useState('');
+  const [eventType, setEventType] = useState('');
+
+  useEffect(() => {
+    Animated.timing(slideAnimation, {
+      toValue: isVisible ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isVisible]);
+
+  const applyFilter = () => {
+    onApply(date, eventName, eventType);
+    onClose();
+  };
+
+  return (
+    <Animated.View
+      style={[
+        styles.filterContainer,
+        {
+          transform: [
+            {
+              translateY: slideAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [700, 0],
+              }),
+            },
+          ],
+        },
+      ]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Text style={styles.filterText}>Filters</Text>
+
+        <TextInput
+          style={styles.input}
+          onChangeText={setEventName}
+          value={eventName}
+          placeholder="Event Name"
+        />
+        <DateTimePicker
+          mode="single"
+          date={date}
+          onChange={params => setDate(dayjs(params.date).format('YYYY-MM-DD'))}
+        />
+        <Picker
+          selectedValue={eventType}
+          onValueChange={itemValue => setEventType(itemValue)}
+          style={styles.input}>
+          <Picker.Item label="Select Event Type" value="" />
+          <Picker.Item label="BirthDay" value="BirthDay" />
+          <Picker.Item label="Wedding" value="Wedding" />
+        </Picker>
+        <View>
+          <TouchableOpacity
+            style={styles.ButtonStyle}
+            title="Apply"
+            onPress={applyFilter}>
+            <Text style={styles.filterText}>Apply</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.ButtonStyle}
+            title="Cancel"
+            onPress={onClose}>
+            <Text style={styles.filterText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </Animated.View>
+  );
+};
 
 const App = () => {
   const [events, setEvents] = useState([]);
@@ -17,6 +99,12 @@ const App = () => {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [fetchController, setFetchController] = useState(null);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [filterData, setFilterData] = useState({
+    date: dayjs().format('YYYY-MM-DD'),
+    name: '',
+    type: '',
+  });
 
   useEffect(() => {
     fetchEvents();
@@ -29,18 +117,25 @@ const App = () => {
     setFetchController(controller);
 
     try {
-      const response = await fetch('http://192.168.1.7:3000/events', {
+      const queryParams = new URLSearchParams(filterData);
+      const url = `http://192.168.1.7:3000/events?${queryParams}`;
+
+      const response = await fetch(url, {
         signal: controller.signal,
       });
       const data = await response.json();
-      setEvents(data.events);
+      if (data.error == null) {
+        setEvents(data.events);
+        setError(false);
+      } else showError(data.error);
       setLoading(false);
-      setError(false);
+
       console.log('Fetch successful');
     } catch (error) {
       if (error.name !== 'AbortError') {
+        console.error('Error fetching events:', error);
         setLoading(false);
-        setErrorWithLog(error);
+        showError(error);
       }
     }
   };
@@ -58,28 +153,45 @@ const App = () => {
     ));
   };
 
+  const showError = error => {
+    setError(true);
+    setErrorMessage(error);
+    console.log('Error occurred:', error);
+  };
   const refreshPress = () => {
     setLoading(true);
     fetchEvents();
   };
 
-  const setErrorWithLog = message => {
-    setErrorMessage(message);
-    setError(true);
-    console.log('Error message set:', message);
+  const toggleFilter = () => {
+    setIsFilterVisible(prev => !prev);
   };
 
+  const closeFilter = () => {
+    setIsFilterVisible(false);
+  };
+
+  const applyFilter = (newDate, newName, newType) => {
+    setFilterData({
+      date: newDate,
+      name: newName,
+      type: newType,
+    });
+  };
+  useEffect(() => {
+    console.log(filterData);
+    fetchEvents();
+  }, [filterData]);
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-
       <Image
         source={require('./Assets/evendorLogo1.png')}
         style={styles.headerImage}
       />
       <View style={styles.mainView}>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.ButtonStyle}>
+          <TouchableOpacity style={styles.ButtonStyle} onPress={toggleFilter}>
             <Image
               source={require('./Assets/filtericon.png')}
               style={styles.buttonImage}
@@ -111,9 +223,15 @@ const App = () => {
           <View style={{paddingBottom: 60}} />
         </ScrollView>
       </View>
+      <FilterComponent
+        isVisible={isFilterVisible}
+        onClose={closeFilter}
+        onApply={applyFilter}
+      />
     </SafeAreaView>
   );
 };
+
 // styles
 const styles = StyleSheet.create({
   container: {
@@ -170,6 +288,25 @@ const styles = StyleSheet.create({
   loader: {
     marginTop: 50,
   },
+  errorText: {
+    fontSize: 18,
+    borderWidth: 2,
+    borderColor: '#FC131F',
+    backgroundColor: '#FFF',
+    borderRadius: 17,
+    padding: 10,
+    marginTop: 10,
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.37,
+    shadowRadius: 7.49,
+
+    elevation: 12,
+  },
   buttonContainer: {
     flexDirection: 'column',
     position: 'absolute',
@@ -197,10 +334,30 @@ const styles = StyleSheet.create({
     height: 30,
     alignSelf: 'center',
   },
-  errorText: {
+  filterContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    elevation: 5,
+  },
+
+  filterText: {
     fontSize: 18,
-    color: 'red',
-    marginTop: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    alignSelf: 'center',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
   },
 });
 
