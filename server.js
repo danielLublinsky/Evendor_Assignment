@@ -16,7 +16,7 @@ const db = new sqlite3.Database("./events.db", (err) => {
   }
 });
 
-// Create events table if not exists
+// Create events table
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS events (
@@ -130,7 +130,6 @@ app.get("/events", (req, res) => {
   const filters = [];
 
   Object.keys(queryParams).forEach((key) => {
-    // Only apply the filter if the query parameter has a value
     if (queryParams[key]) {
       filters.push(`${key} = '${queryParams[key]}'`);
     }
@@ -145,6 +144,52 @@ app.get("/events", (req, res) => {
       return res.status(500).json({ error: "Failed to retrieve events." });
     }
     return res.status(200).json({ events: rows });
+  });
+});
+
+app.get("/venues", (req, res) => {
+  const { date, guestNumber } = req.query;
+
+  // Check if date and guestNumber are provided
+  if (!date || !guestNumber) {
+    return res
+      .status(400)
+      .json({ error: "Date and guestNumber are required." });
+  }
+
+  // Fetch venues from the database based on the provided date and guest number
+  const sql = `
+    SELECT * FROM events
+    WHERE date = ? AND guestNumber >= ?
+    ORDER BY price
+  `;
+  const params = [date, guestNumber];
+
+  db.all(sql, params, (err, rows) => {
+    if (err) {
+      console.error("Error retrieving venues:", err.message);
+      return res.status(500).json({ error: "Failed to retrieve venues." });
+    }
+
+    return res.status(200).json({ venues: rows });
+  });
+});
+
+app.get("/users", (req, res) => {
+  const sql = `
+    SELECT booked_events.email AS email, COUNT(*) AS eventCount
+    FROM booked_events
+    GROUP BY booked_events.email
+    ORDER BY eventCount DESC
+  `;
+
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error("Error retrieving users:", err.message);
+      return res.status(500).json({ error: "Failed to retrieve users." });
+    }
+
+    return res.status(200).json({ users: rows });
   });
 });
 

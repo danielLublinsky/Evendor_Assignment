@@ -87,16 +87,16 @@ const FilterComponent = ({isVisible, onClose, onApply}) => {
         </Picker>
         <View>
           <TouchableOpacity
-            style={styles.button}
+            style={styles.Applybutton}
             title="Apply"
             onPress={applyFilter}>
-            <Text style={styles.buttonText}>Apply</Text>
+            <Text style={styles.ApplybuttonText}>Apply</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.button}
+            style={styles.Clearbutton}
             title="Cancel"
             onPress={cancelFilter}>
-            <Text style={styles.buttonText}>Cancel</Text>
+            <Text style={styles.buttonText}>Clear</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
   },
-  button: {
+  Clearbutton: {
     backgroundColor: '#F7FF56',
     padding: 10,
     borderRadius: 5,
@@ -143,7 +143,27 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginVertical: 5,
   },
+  Applybutton: {
+    backgroundColor: '#0000ff',
+    padding: 10,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+    marginVertical: 5,
+  },
   buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  ApplybuttonText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',

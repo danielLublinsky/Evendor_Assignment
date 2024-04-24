@@ -112,8 +112,8 @@ const CreateEventComponent = ({isVisible, onClose, onApply}) => {
               value={eventPrice}
               placeholder="Event Price"
             />
-            <TouchableOpacity style={styles.button} onPress={handleNext}>
-              <Text style={styles.buttonText}>Next</Text>
+            <TouchableOpacity style={styles.Applybutton} onPress={handleNext}>
+              <Text style={styles.ApplybuttonText}>Next</Text>
             </TouchableOpacity>
           </>
         )}
@@ -127,8 +127,8 @@ const CreateEventComponent = ({isVisible, onClose, onApply}) => {
                 setEventDate(dayjs(params.date).format('YYYY-MM-DD'))
               }
             />
-            <TouchableOpacity style={styles.button} onPress={applyEvent}>
-              <Text style={styles.buttonText}>Apply</Text>
+            <TouchableOpacity style={styles.Applybutton} onPress={applyEvent}>
+              <Text style={styles.ApplybuttonText}>Apply</Text>
             </TouchableOpacity>
           </>
         )}
@@ -180,7 +180,27 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginVertical: 5,
   },
+  Applybutton: {
+    backgroundColor: '#0000ff',
+    padding: 10,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+    marginVertical: 5,
+  },
   buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  ApplybuttonText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',

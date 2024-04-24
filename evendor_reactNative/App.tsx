@@ -13,7 +13,8 @@ import {
 import BookEventComponent from './BookEventComponent';
 import CreateEventComponent from './CreateEventComponent';
 import FilterComponent from './FilterComponent';
-
+import VenueSearchComponent from './VenueSearchComponent';
+import UserListComponent from './userListComponent';
 const App = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +25,8 @@ const App = () => {
   const [isCreateEventVisible, setIsCreateEventVisible] = useState(false);
   const [isBookEventVisible, setIsBookEventVisible] = useState(false);
   const [bookingEventId, setbookingEventId] = useState('');
+  const [isVenueSearchVisible, setIsVenueSearchVisible] = useState(false);
+  const [isUserListVisible, setIsUserListVisible] = useState(false);
   const [filterData, setFilterData] = useState({
     date: '',
     name: '',
@@ -43,7 +46,6 @@ const App = () => {
     try {
       const queryParams = new URLSearchParams(filterData);
       const url = `http://192.168.1.7:3000/events?${queryParams}`;
-      console.log(url);
       const response = await fetch(url, {
         signal: controller.signal,
       });
@@ -65,6 +67,10 @@ const App = () => {
   };
 
   const renderEvents = () => {
+    if (events.length === 0) {
+      showError('No events found ):');
+    }
+
     return events.map((event, index) => (
       <View key={index} style={styles.eventContainer}>
         <Text style={styles.eventTitle}>{event.name}</Text>
@@ -83,23 +89,32 @@ const App = () => {
     ));
   };
 
+  const closeComponents = () => {
+    closeBookEvent();
+    closeCreateEvent();
+    closeFilter();
+    closeVenues();
+    closeUserList();
+  };
+
   const showError = error => {
     setError(true);
     setErrorMessage(error);
     console.log('Error occurred:', error);
   };
   const refreshPress = () => {
+    closeComponents();
     setLoading(true);
     fetchEvents();
   };
 
   const toggleFilter = () => {
-    closeBookEvent();
+    closeComponents();
     setIsFilterVisible(prev => !prev);
   };
 
   const toggleCreateEvent = () => {
-    closeBookEvent();
+    closeComponents();
     setIsCreateEventVisible(prev => !prev);
   };
 
@@ -112,13 +127,29 @@ const App = () => {
   };
 
   const toggleBookEvent = eventId => {
-    closeFilter();
-    closeCreateEvent();
+    closeComponents();
     setbookingEventId(eventId);
     setIsBookEventVisible(true);
   };
   const closeBookEvent = () => {
     setIsBookEventVisible(false);
+  };
+
+  const toggleVenues = () => {
+    closeComponents();
+    setIsVenueSearchVisible(prev => !prev);
+  };
+
+  const closeVenues = () => {
+    setIsVenueSearchVisible(false);
+  };
+
+  const toggleUserList = () => {
+    setIsUserListVisible(prev => !prev);
+  };
+
+  const closeUserList = () => {
+    setIsUserListVisible(false);
   };
 
   const bookEvent = async email => {
@@ -200,10 +231,26 @@ const App = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
+
+      <View style={styles.TopbuttonContainer}>
+        <TouchableOpacity style={styles.ButtonStyle} onPress={toggleVenues}>
+          <Image
+            source={require('./Assets/eventIcon.png')}
+            style={styles.buttonImage}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.ButtonStyle} onPress={toggleUserList}>
+          <Image
+            source={require('./Assets/userIcon.png')}
+            style={styles.buttonImage}
+          />
+        </TouchableOpacity>
+      </View>
       <Image
         source={require('./Assets/evendorLogo1.png')}
         style={styles.headerImage}
       />
+
       <View style={styles.mainView}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.ButtonStyle} onPress={toggleFilter}>
@@ -253,13 +300,22 @@ const App = () => {
       />
       <CreateEventComponent
         isVisible={isCreateEventVisible}
-        onClose={toggleCreateEvent}
+        onClose={closeCreateEvent}
         onApply={applyEvent}
       />
       <BookEventComponent
         isVisible={isBookEventVisible}
         onClose={closeBookEvent}
         onBook={bookEvent}
+      />
+      <VenueSearchComponent
+        isVisible={isVenueSearchVisible}
+        onClose={closeVenues}
+        setEvents={setEvents}
+      />
+      <UserListComponent
+        isVisible={isUserListVisible}
+        onClose={closeUserList}
       />
     </SafeAreaView>
   );
@@ -345,6 +401,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
+    zIndex: 1,
+  },
+
+  TopbuttonContainer: {
+    flexDirection: 'column',
+    position: 'absolute',
+    top: 10,
+    left: 10,
   },
   ButtonStyle: {
     backgroundColor: '#F7FF56',
@@ -359,7 +423,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
 
     elevation: 3,
-    zIndex: 1,
+
     marginVertical: 5,
   },
   buttonImage: {
