@@ -34,10 +34,6 @@ const App = () => {
     type: '',
   });
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
   const fetchEvents = async () => {
     if (fetchController) fetchController.abort();
 
