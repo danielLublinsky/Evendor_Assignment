@@ -53,6 +53,7 @@ const eventFields = ["name", "date", "venue", "guestNumber", "type", "price"];
 const eventFilters = [
   { name: "type", filter: filterByType },
   { name: "date", filter: filterByDate },
+  { name: "name", filter: filterByName },
 ];
 app.post("/events", (req, res) => {
   const eventData = req.body;
@@ -103,6 +104,12 @@ function filterByType(events, eventType) {
 }
 function filterByDate(events, eventDate) {
   return events.filter((event) => event.date === eventDate);
+}
+function filterByName(events, eventName) {
+  const lowerCaseEventName = eventName.toLowerCase();
+  return events.filter((event) =>
+    event.name.toLowerCase().includes(lowerCaseEventName)
+  );
 }
 
 // start server

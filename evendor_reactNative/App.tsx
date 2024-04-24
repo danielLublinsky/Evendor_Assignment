@@ -34,7 +34,7 @@ const FilterComponent = ({isVisible, onClose, onApply}) => {
 
   const applyFilter = () => {
     onApply(date, eventName, eventType);
-    closeFilter();
+    onClose();
   };
 
   const cancelFilter = () => {
