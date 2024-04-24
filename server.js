@@ -1,118 +1,154 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const sqlite3 = require("sqlite3").verbose();
 
 const PORT = 3000;
 const app = express();
 
 app.use(bodyParser.json());
 
-let eventsList = [
-  {
-    name: "Demo event 1",
-    date: "2024-04-23",
-    venue: "Venue 1",
-    guestNumber: 25,
-    type: "BirthDay",
-    price: 3000,
-  },
-  {
-    name: "Demo event 2",
-    date: "2024-04-23",
-    venue: "Venue 2",
-    guestNumber: 150,
-    type: "Wedding",
-    price: 10000,
-  },
-  {
-    name: "Demo event 2",
-    date: "2024-04-21",
-    venue: "Venue 2",
-    guestNumber: 150,
-    type: "wedding",
-    price: 10000,
-  },
-  {
-    name: "Demo event 2",
-    date: "2024-04-21",
-    venue: "Venue 2",
-    guestNumber: 150,
-    type: "Wedding",
-    price: 10000,
-  },
-  {
-    name: "Demo event 2",
-    date: "2024-04-21",
-    venue: "Venue 2",
-    guestNumber: 150,
-    type: "Wedding",
-    price: 10000,
-  },
-];
-const eventFields = ["name", "date", "venue", "guestNumber", "type", "price"];
+// Connect to SQLite database
+const db = new sqlite3.Database("./events.db", (err) => {
+  if (err) {
+    console.error("Error connecting to SQLite database:", err.message);
+  } else {
+    console.log("Connected to the SQLite database.");
+  }
+});
 
-const eventFilters = [
-  { name: "type", filter: filterByType },
-  { name: "date", filter: filterByDate },
-  { name: "name", filter: filterByName },
-];
+// Create events table if not exists
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      date TEXT NOT NULL,
+      venue TEXT,
+      guestNumber INTEGER,
+      type TEXT,
+      price INTEGER
+    )
+  `);
+});
+
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS booked_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      eventId INTEGER,
+      email TEXT NOT NULL,
+      FOREIGN KEY (eventId) REFERENCES events(id)
+    )
+  `);
+});
+
 app.post("/events", (req, res) => {
   const eventData = req.body;
 
-  // Validating data in a clean & dynamic way
-  let missingFields = [];
-  for (let i = 0; i < eventFields.length; i++) {
-    const field = eventFields[i];
-    if (!eventData[field]) {
-      missingFields.push(field);
-    }
-  }
+  // Check if all required fields are present
+  const requiredFields = [
+    "name",
+    "date",
+    "venue",
+    "guestNumber",
+    "type",
+    "price",
+  ];
+  const missingFields = requiredFields.filter((field) => !eventData[field]);
 
   if (missingFields.length > 0) {
-    return res.status(400).json({
-      error: `Missing required fields: ${missingFields.join(", ")}`,
-    });
+    return res
+      .status(400)
+      .json({ error: `Missing required fields: ${missingFields.join(", ")}` });
   }
 
-  eventsList.push(eventData);
+  const sql = `
+    INSERT INTO events (name, date, venue, guestNumber, type, price)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  const params = [
+    eventData.name,
+    eventData.date,
+    eventData.venue,
+    eventData.guestNumber,
+    eventData.type,
+    eventData.price,
+  ];
 
-  return res
-    .status(201)
-    .json({ message: "Event created successfully.", event: eventData });
+  db.run(sql, params, function (err) {
+    if (err) {
+      console.error("Error creating event:", err.message);
+      return res.status(500).json({ error: "Failed to create event." });
+    }
+    console.log(`Event created with id ${this.lastID}`);
+    return res.status(201).json({ message: "Event created successfully." });
+  });
 });
 
+app.post("/book-event/:eventId", (req, res) => {
+  const { eventId } = req.params;
+  const { email } = req.body;
+
+  // Check if email and eventId are provided
+  if (!email || !eventId) {
+    return res.status(400).json({ error: "Email and eventId are required." });
+  }
+
+  // Check if the event with the provided eventId exists
+  db.get("SELECT * FROM events WHERE id = ?", [eventId], (err, event) => {
+    if (err) {
+      console.error("Error checking event:", err.message);
+      return res.status(500).json({ error: "Failed to book event." });
+    }
+
+    if (!event) {
+      return res.status(404).json({ error: "Event not found." });
+    }
+
+    // Insert booking data into booked_events table
+    const sql = `
+      INSERT INTO booked_events (eventId, email)
+      VALUES (?, ?)
+    `;
+    const params = [eventId, email];
+
+    db.run(sql, params, function (err) {
+      if (err) {
+        console.error("Error booking event:", err.message);
+        return res.status(500).json({ error: "Failed to book event." });
+      }
+
+      console.log(`Event booked with id ${this.lastID}`);
+      return res.status(201).json({ message: "Event booked successfully." });
+    });
+  });
+});
+
+// Retrieve events
 app.get("/events", (req, res) => {
   const queryParams = req.query;
-  console.log(queryParams);
-  let filteredEvents = eventsList;
+  const filters = [];
 
-  // Using loops and objects for clean dynamic code
-  eventFilters.forEach((filter) => {
-    if (queryParams[filter.name]) {
-      filteredEvents = filter.filter(filteredEvents, queryParams[filter.name]);
+  Object.keys(queryParams).forEach((key) => {
+    // Only apply the filter if the query parameter has a value
+    if (queryParams[key]) {
+      filters.push(`${key} = '${queryParams[key]}'`);
     }
   });
 
-  if (filteredEvents.length === 0) {
-    return res.status(404).json({ error: "No events found." });
-  }
+  const filterQuery = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
-  return res.status(200).json({ events: filteredEvents });
+  const sql = `SELECT * FROM events ${filterQuery}`;
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error("Error retrieving events:", err.message);
+      return res.status(500).json({ error: "Failed to retrieve events." });
+    }
+    return res.status(200).json({ events: rows });
+  });
 });
 
-function filterByType(events, eventType) {
-  return events.filter((event) => event.type === eventType);
-}
-function filterByDate(events, eventDate) {
-  return events.filter((event) => event.date === eventDate);
-}
-function filterByName(events, eventName) {
-  const lowerCaseEventName = eventName.toLowerCase();
-  return events.filter((event) =>
-    event.name.toLowerCase().includes(lowerCaseEventName)
-  );
-}
-
-// start server
+// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

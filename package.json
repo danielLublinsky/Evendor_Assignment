@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/zzzxxxzz/Evendor_Assignment#readme",
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
   }
 }
