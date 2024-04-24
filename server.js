@@ -12,7 +12,7 @@ let eventsList = [
     date: "2024-04-23",
     venue: "Venue 1",
     guestNumber: 25,
-    type: "birthday",
+    type: "BirthDay",
     price: 3000,
   },
   {
@@ -20,7 +20,7 @@ let eventsList = [
     date: "2024-04-23",
     venue: "Venue 2",
     guestNumber: 150,
-    type: "wedding",
+    type: "Wedding",
     price: 10000,
   },
   {
@@ -36,7 +36,7 @@ let eventsList = [
     date: "2024-04-21",
     venue: "Venue 2",
     guestNumber: 150,
-    type: "wedding",
+    type: "Wedding",
     price: 10000,
   },
   {
@@ -44,7 +44,7 @@ let eventsList = [
     date: "2024-04-21",
     venue: "Venue 2",
     guestNumber: 150,
-    type: "wedding",
+    type: "Wedding",
     price: 10000,
   },
 ];
