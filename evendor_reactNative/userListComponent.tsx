@@ -27,13 +27,13 @@ const UserListComponent = ({isVisible, onClose}) => {
   const fetchUsers = async () => {
     try {
       const response = await fetch('http://192.168.1.7:3000/users');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
       const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
       setUsers(data.users);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error(error);
     }
   };
 

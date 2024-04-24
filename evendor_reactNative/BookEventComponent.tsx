@@ -11,11 +11,9 @@ const BookEventComponent = ({isVisible, onClose, onBook}) => {
   const [email, setEmail] = useState('');
 
   const handleBook = () => {
-    if (email.trim() !== '') {
-      onBook(email);
-      setEmail('');
-      onClose();
-    }
+    onBook(email);
+    setEmail('');
+    onClose();
   };
 
   const handleCancel = () => {

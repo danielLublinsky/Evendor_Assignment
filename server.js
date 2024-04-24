@@ -78,7 +78,7 @@ app.post("/events", (req, res) => {
   db.run(sql, params, function (err) {
     if (err) {
       console.error("Error creating event:", err.message);
-      return res.status(500).json({ error: "Failed to create event." });
+      return res.status(500).json({ error: "Failed to create event" });
     }
     console.log(`Event created with id ${this.lastID}`);
     return res.status(201).json({ message: "Event created successfully." });
@@ -91,7 +91,7 @@ app.post("/book-event/:eventId", (req, res) => {
 
   // Check if email and eventId are provided
   if (!email || !eventId) {
-    return res.status(400).json({ error: "Email and eventId are required." });
+    return res.status(400).json({ error: "Email is required." });
   }
 
   // Check if the event with the provided eventId exists

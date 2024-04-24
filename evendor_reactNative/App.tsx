@@ -59,7 +59,7 @@ const App = () => {
       console.log('Fetch successful');
     } catch (error) {
       if (error.name !== 'AbortError') {
-        console.error('Error fetching events:', error);
+        console.error(error);
         setLoading(false);
         showError(error);
       }
@@ -167,15 +167,13 @@ const App = () => {
         },
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to book event');
-      }
-
       const data = await response.json();
-      console.log('Event booked successfully:', data.message);
+      if (data.error) {
+        throw new Error(data.error);
+      }
       closeBookEvent();
     } catch (error) {
-      console.error('Error booking event:', error);
+      console.error(error);
     }
   };
 
@@ -211,15 +209,13 @@ const App = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create event');
-      }
-
       const data = await response.json();
-      console.log('New event created:', data.event);
+      if (data.error) {
+        throw new Error(data.error);
+      }
       closeCreateEvent();
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error(error);
     }
   };
 

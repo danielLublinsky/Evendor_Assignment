@@ -21,16 +21,15 @@ const VenueSearchComponent = ({isVisible, onClose, setEvents}) => {
 
     try {
       const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Failed to fetch venues');
-      }
+
       const data = await response.json();
-      console.log(data.venues);
+      if (data.error) {
+        throw new Error(data.error);
+      }
       setEvents(data.venues);
       onClose();
     } catch (error) {
-      console.error('Error fetching venues:', error);
-      // Handle error accordingly
+      console.error(error);
     }
   };
 
