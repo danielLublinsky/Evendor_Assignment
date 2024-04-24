@@ -7,7 +7,7 @@ import {
   Animated,
   TouchableOpacity,
 } from 'react-native';
-
+import {SERVER_ADDRESS} from './App';
 const UserListComponent = ({isVisible, onClose}) => {
   const [users, setUsers] = useState([]);
 
@@ -26,7 +26,7 @@ const UserListComponent = ({isVisible, onClose}) => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://192.168.1.7:3000/users');
+      const response = await fetch(`${SERVER_ADDRESS}/users`);
       const data = await response.json();
       if (data.error) {
         throw new Error(data.error);

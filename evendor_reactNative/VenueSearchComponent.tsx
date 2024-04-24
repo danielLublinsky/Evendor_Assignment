@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import DateTimePicker from 'react-native-ui-datepicker';
 import dayjs from 'dayjs';
+import {SERVER_ADDRESS} from './App';
 const VenueSearchComponent = ({isVisible, onClose, setEvents}) => {
   const [guestNumber, setGuestNumber] = useState('');
   const [dateShown, setDateShown] = useState(dayjs().format('YYYY-MM-DD'));
@@ -17,7 +18,7 @@ const VenueSearchComponent = ({isVisible, onClose, setEvents}) => {
       date: dateShown,
       guestNumber: guestNumber,
     });
-    const url = `http://192.168.1.7:3000/venues?${queryParams}`;
+    const url = `${SERVER_ADDRESS}/venues?${queryParams}`;
 
     try {
       const response = await fetch(url);

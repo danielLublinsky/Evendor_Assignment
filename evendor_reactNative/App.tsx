@@ -15,6 +15,7 @@ import CreateEventComponent from './CreateEventComponent';
 import FilterComponent from './FilterComponent';
 import VenueSearchComponent from './VenueSearchComponent';
 import UserListComponent from './userListComponent';
+
 const App = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ const App = () => {
 
     try {
       const queryParams = new URLSearchParams(filterData);
-      const url = `http://192.168.1.7:3000/events?${queryParams}`;
+      const url = `${SERVER_ADDRESS}/events?${queryParams}`;
       const response = await fetch(url, {
         signal: controller.signal,
       });
@@ -155,7 +156,7 @@ const App = () => {
   const bookEvent = async email => {
     try {
       const response = await fetch(
-        `http://192.168.1.7:3000/book-event/${bookingEventId}`,
+        `${SERVER_ADDRESS}/book-event/${bookingEventId}`,
         {
           method: 'POST',
           headers: {
@@ -194,7 +195,7 @@ const App = () => {
     eventDate,
   ) => {
     try {
-      const response = await fetch('http://192.168.1.7:3000/events', {
+      const response = await fetch(`${SERVER_ADDRESS}/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -430,3 +431,4 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+export const SERVER_ADDRESS = 'http://192.168.1.7:3000';
