@@ -76,7 +76,7 @@ const App = () => {
         <Text style={styles.eventDescription}>Guests: {event.guestNumber}</Text>
         <Text style={styles.eventDescription}>Type: {event.type}</Text>
         <Text style={styles.eventDescription}>Price: {event.price}</Text>
-        <Text style={styles.eventDescription}>id: {event.id}</Text>
+
         <TouchableOpacity
           style={styles.ButtonStyle}
           onPress={() => toggleBookEvent(event.id)}>
